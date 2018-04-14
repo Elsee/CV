@@ -1,0 +1,1 @@
+Best parameters: {'kernel': 'linear', 'nu': 0.1}

@@ -1,66 +1,19 @@
-# Importing the libraries
+from keras.datasets import cifar100
 import numpy as np
-import matplotlib.pyplot as plt
-import pandas as pd
 import csv
 
-from sklearn.metrics import accuracy_score
-from sklearn.preprocessing import StandardScaler
+(x_train, y_train), (x_test, y_test) = cifar100.load_data()
 
-def unpickle(file):
-    import pickle
-    with open(file, 'rb') as fo:
-        dict = pickle.load(fo, encoding='bytes')
-    return dict
-
-X_train = np.array([])
-X_train.shape=(0, 32, 32, 3)
-
-y_train = np.array([])
-
-# Importing the dataset
-for i in range(1,6):
-    data = unpickle('../cifar-10-batches-py/data_batch_' + str(i))
-    dataset = data[b'data']
-    labels = data[b'labels']
-    dataset = dataset.reshape(10000, 3, 32, 32).transpose(0,2,3,1).astype("float")
-    labels = np.array(labels)
-    X_train = np.concatenate( (X_train,dataset) )
-    y_train = np.concatenate( (y_train,labels) )
-
-test_data = unpickle('../cifar-10-batches-py/test_batch')
-X_test = test_data[b'data']
-X_test = X_test.reshape(10000, 3, 32, 32).transpose(0,2,3,1).astype("float")
-y_test = test_data[b'labels']
-y_test = np.array(y_test)
-
-classes = ['plane', 'car', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship', 'truck']
-num_classes = len(classes)
-samples_per_class = 7
-for y, cls in enumerate(classes):
-    idxs = np.flatnonzero(y_train == y)
-    idxs = np.random.choice(idxs, samples_per_class, replace=False)
-    for i, idx in enumerate(idxs):
-        plt_idx = i * num_classes + y + 1
-        plt.subplot(samples_per_class, num_classes, plt_idx)
-        plt.imshow(X_train[idx].astype('uint8'))
-        plt.axis('off')
-        if i == 0:
-            plt.title(cls)
-plt.show()
-
-X_train = np.reshape(X_train, (X_train.shape[0], -1))
-X_test = np.reshape(X_test, (X_test.shape[0], -1))
-
-# build a one class svm model
+x_train = np.reshape(x_train, (x_train.shape[0], -1))
+x_test = np.reshape(x_test, (x_test.shape[0], -1))
 
 sumFRR = 0;
 sumFAR = 0;
 row_accuracy = []
         
-for img in range (10):
+for img in range (100):
     target_class_labels = np.where([y_train[:]==img])[1]
-    target_class_data = X_train[:][target_class_labels]
+    target_class_data = x_train[:][target_class_labels]
     y_test_temp = np.copy(y_test)
     
     for i in range(len(y_test_temp)):
@@ -68,13 +21,13 @@ for img in range (10):
             y_test_temp[i] = 1
         else:
             y_test_temp[i] = -1
-            
+    
     test_target_idxs = np.where([y_test_temp[:]==1])[1]        
-    test_target_class_data = X_test[:][test_target_idxs]
+    test_target_class_data = x_test[:][test_target_idxs]
     test_target_labels = y_test_temp[y_test_temp[:]==1]
     
     outliers_idxs = np.where([y_test_temp[:]!=1])[1] 
-    outliers_class_data = X_test[:][outliers_idxs]
+    outliers_class_data = x_test[:][outliers_idxs]
     outliers_labels = y_test_temp[y_test_temp[:]==-1]
      
     # Fitting Kernel SVM to the Training set
@@ -116,4 +69,4 @@ with open('results_new_accuracy/output.csv','a') as f:
     writer.writerow(row_accuracy)
       
 with open('svmOneClassWithoutAE/resultSVMauthAccuracy.txt', "a") as myfile:
-    myfile.write("Mean: \nFAR: " + str("%.5f" % (sumFAR/10)) + "\nFRR: " + str("%.5f" % (sumFRR/10)) + "\n\n\n")
+    myfile.write("Mean: \nFAR: " + str("%.5f" % (sumFAR/100)) + "\nFRR: " + str("%.5f" % (sumFRR/100)) + "\n\n\n")
